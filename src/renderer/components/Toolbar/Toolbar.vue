@@ -6,27 +6,39 @@
       </div>
       <div class="flex-item section">
             <Icon class="icon" name="plus" scale="1.0"></Icon>
-            <span v-if="!collapsed" class="title" >New Feed</span>
+            <span v-show="!collapsed" class="title" >New Feed</span>
       </div>
       <div class="flex-item section">
             <Icon class="icon" name="user-o" scale="1.0"></Icon>
-            <span v-if="!collapsed" class="title" >Account</span>
+            <span v-show="!collapsed" class="title" >Account</span>
       </div>
       <div class="category">
         <div class="flex-item section">
             <Icon class="icon" name="folder-o" scale="1.0"></Icon>
-            <span v-if="!collapsed" class="title" >Category</span>
+            <span v-show="!collapsed" class="title" >Category</span>
         </div>
         <div v-if="!collapsed" class="flex-item sub-item">
             <Icon class="icon" name="plus" scale="1.0"></Icon>
             <span class="title" >New Category</span>
         </div>
+        <FeedList v-for="category in categories" 
+            :key="category.id" 
+            :feeds="feeds[category.id]"
+            :collapsed="collapsed"
+            :category="categories[category.id]"
+            :selected="category.id == currentCategory"
+            @select="selectCategory"
+            @update="updateCategory"
+            @remove="removeCategory"
+            :ref="category.id">
+        </FeedList>
       </div>
   </div>
 </template>
 
 <script>
     import Icon from "vue-awesome/components/Icon"
+    import FeedList from '../FeedList/FeedList'
     import { mapState } from 'vuex'
     import "vue-awesome/icons/bars"
     import "vue-awesome/icons/plus"
@@ -36,7 +48,7 @@
     export default {
         name: "Toolbar",
         components: {
-            Icon
+            Icon, FeedList
         },
         data() {
             return {
@@ -45,7 +57,9 @@
         },
         computed: {
             ...mapState({
+                currentCategory: state => state.Category.currentCategory,
                 categories: state => state.Category.categories,
+                feeds: state => state.Feed.feeds,
                 loading: state => state.Category.loading,
                 status: state => state.Category.status,
                 msg: state => state.Category.msg,
@@ -54,6 +68,19 @@
         methods: {
             collapse(){
                 this.collapsed = !this.collapsed;
+            },
+            selectCategory(id) {
+                if (this.currentCategory!==id){
+                    if (this.currentCategory !== 0)
+                        this.$refs[this.currentCategory][0].clearCurrentFeed();
+                    this.$store.commit('Category/SET_CURRENT_CATEGORY', { currentCategory: id });
+                }
+            },
+            updateCategory() {
+
+            },
+            removeCategory(id) {
+
             }
         }
     }
@@ -65,14 +92,6 @@
         flex-direction: column;
         background-color: black;
         opacity: 0.6;
-        .sub-item {
-            padding-left: 15px;
-            &:hover {
-                background-color: white;
-                color: black;
-                opacity: 0.5;
-            }
-        }
         .section {
             margin-bottom: 10px;
             &:hover {
@@ -103,6 +122,14 @@
         height: 30px;
         font-size: 13px;
         padding-left:15px;
+    }
+    .sub-item {
+        padding-left: 15px;
+        &:hover {
+            background-color: white;
+            color: black;
+            opacity: 0.5;
+        }
     }
 </style>
 

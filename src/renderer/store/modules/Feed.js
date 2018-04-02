@@ -1,8 +1,29 @@
+import * as FeedApi from '../../services/Feed'
+
 const state = {
     currentFeed: 0,
     feeds: {
-
-    }
+        1: {
+            1: {
+                id: 1,
+                name: 'Guoker',
+                address: 'https://www.appinn.com/feed/'
+            },
+            2: {
+                id: 2,
+                name: 'Test Feed2'
+            }
+        },
+        2: {
+            3: {
+                id: 3,
+                name: 'T Fed'
+            }
+        }
+    },
+    loading: false,
+    status: false,
+    msg: ""
   }
   
   const mutations = {
@@ -23,17 +44,35 @@ const state = {
         state.feeds = {
             ...state.feeds
         }
+    },
+    OPERATION_REQUEST (state) {
+        state.loading = true
+    },
+    OPERATION_SUCCESS (state) {
+        state.loading = false;
+        state.status = true;
+    },
+    OPERATION_FAIL (state,payload) {
+        state.loading = false;
+        state.status = false;
+        state.msg = payload.msg;
     }
   }
   
   const actions = {
-    someAsyncTask ({ commit }) {
-      // do something async
-      commit('INCREMENT_MAIN_COUNTER')
+    async requestNewPosts ({ commit }, payload) {
+        console.log('enter');
+        commit('OPERATION_REQUEST');
+        let data = await FeedApi.getFeedPosts(payload);
+        if (data.success) {
+            commit('OPERATION_SUCCESS');
+            console.log(data);
+        }
     }
   }
   
   export default {
+    namespaced: true,
     state,
     mutations,
     actions

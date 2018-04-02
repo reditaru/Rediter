@@ -1,6 +1,7 @@
 import axios from 'axios'
 import auth  from './auth'
 function handleError(response) {
+    let promise;
     if (promise == null) {
         return { status: response.status, success: false };
     }
@@ -10,7 +11,7 @@ function handleError(response) {
         return data;
     });
 }
-export function request(url, options) {
+export default function request(url, options) {
     if (options == null) {
         options = {};
     }
@@ -31,5 +32,5 @@ export function request(url, options) {
             }
             return data;
         })
-        .catch(response => handleError(response));
+        .catch(response => console.log(response));
 }

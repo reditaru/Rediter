@@ -19,11 +19,13 @@
         props: {
             post: {
                 type: Object,
-                default: {
-                    title: 'Default Title',
-                    description: 'Default description',
-                    created: '2018-04-01',
-                    status: false
+                default: () => {
+                    return {
+                        title: 'Default Title',
+                        description: 'Default description',
+                        created: '2018-04-01',
+                        status: false
+                    };
                 }
             }
         },

@@ -10,18 +10,7 @@
         </div>
         <div class="list">
             <SingleDate></SingleDate>
-            <SinglePost></SinglePost>
-            <SinglePost></SinglePost>
-            <SinglePost></SinglePost>
-            <SinglePost></SinglePost>
-            <SinglePost></SinglePost>
-            <SinglePost></SinglePost>
-            <SinglePost></SinglePost>
-            <SinglePost></SinglePost>
-            <SinglePost></SinglePost>
-            <SinglePost></SinglePost>
-            <SinglePost></SinglePost>
-            <SinglePost></SinglePost>            
+            <SinglePost v-for="post in posts" :key="post.link"></SinglePost>
         </div>
     </div>
 </template>
@@ -39,16 +28,33 @@
         },
         computed: {
             ...mapState({
+                currentPost: state => state.Post.currentPost,
                 currentCategory: state => state.Category.currentCategory,
-                posts: state => state.Post.posts[this.currentCategory],
-                loading: state => state.Post.posts.loading,
-                status: state => state.Post.posts.status,
-                msg: state => state.Post.posts.msg
+                currentFeed: state => state.Feed.currentFeed,
+                feeds: state => state.Feed.feeds,
+                posts: state => state.Post.posts[this.currentFeed],
+                loading: state => state.Feed.loading,
+                status: state => state.Feed.status,
+                msg: state => state.Feed.msg
             })
         },
         methods: {
             refresh() {
-                
+                if (!this.posts) {
+                    if (this.feeds[this.currentCategory] && this.feeds[this.currentCategory][this.currentFeed]) {
+                        let feed = this.feeds[this.currentCategory][this.currentFeed];
+                        this.$store.dispatch('Feed/requestNewPosts', feed);
+                    }
+                }
+            }
+        },
+        beforeUpdate() {
+            console.log('enter')
+            if (!this.posts) {
+                if (this.feeds[this.currentCategory] && this.feeds[this.currentCategory][this.currentFeed]) {
+                    let feed = this.feeds[this.currentCategory][this.currentFeed];
+                    this.$store.dispatch('Feed/requestNewPosts', feed);
+                }
             }
         }
     }

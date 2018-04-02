@@ -1,4 +1,5 @@
 import request from '../utils/request'
+import electron from 'electron'
 import FeedParser from 'feedparser'
 
 export async function deleteFeed(payload) {
@@ -14,23 +15,16 @@ export async function getFeedPosts(payload) {
 }
 const parseFeed = address => {
     const options = {
-        url: address,
-        headers: {
-            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/31.0.1650.63 Safari/537.36',
-            Accept: 'text/html,application/xhtml+xml'
-        }
+        url: address
     }
+    const request = electron.remote.net.request(options);
+    request.setHeader('User-Agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/31.0.1650.63 Safari/537.36');
+    request.setHeader('Accept', 'text/html,application/xhtml+xml');
     const feedParser = new FeedParser();
-    request(options)
-        .on('error', err => {
-            console.log(`error:${err}`);
-        })
-        .on('response', res => {
-            if (res.statusCode != 200) {
-                throw new Error('The feed return invalid data.');
-            }
-        })
-        .pipe(feedParser);
+    request.on('response', (response) => {
+        response.pipe(feedParser);
+    })
+    request.end();
     return new Promise((resolve, reject) => {
         let meta;
         feedParser.on('readable', function() {
