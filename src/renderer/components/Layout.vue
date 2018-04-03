@@ -2,18 +2,19 @@
     <div id="container">
         <Toolbar></Toolbar>
         <PostList></PostList>
-        <article id="main-container"></article>
+        <ContentArea></ContentArea>
     </div>
 </template>
 
 <script>
     import Toolbar from './Toolbar/Toolbar';
     import PostList from './PostList/PostList';
+    import ContentArea from './ContentArea/ContentArea'
 
     export default {
         name: "Layout",
         components: {
-            Toolbar, PostList
+            Toolbar, PostList, ContentArea
         }
     }
 </script>

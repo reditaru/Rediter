@@ -1,5 +1,5 @@
 import * as FeedApi from '../../services/Feed'
-
+import Vue from 'vue'
 const state = {
     currentFeed: 0,
     feeds: {
@@ -11,7 +11,8 @@ const state = {
             },
             2: {
                 id: 2,
-                name: 'Test Feed2'
+                name: 'Test Feed2',
+                address: 'http://feed.williamlong.info/'
             }
         },
         2: {
@@ -52,7 +53,7 @@ const state = {
         state.loading = false;
         state.status = true;
     },
-    OPERATION_FAIL (state,payload) {
+    OPERATION_FAIL (state, payload) {
         state.loading = false;
         state.status = false;
         state.msg = payload.msg;
@@ -61,12 +62,14 @@ const state = {
   
   const actions = {
     async requestNewPosts ({ commit }, payload) {
-        console.log('enter');
         commit('OPERATION_REQUEST');
         let data = await FeedApi.getFeedPosts(payload);
-        if (data.success) {
+        console.log(data);
+        if (data && data.success) {
             commit('OPERATION_SUCCESS');
-            console.log(data);
+            commit('Post/SET_POSTS', { feedId: payload.id, posts: data.items }, { root: true });
+        } else {
+            commit('OPERATION_FAIL', { msg: 'Request failed!' });
         }
     }
   }

@@ -1,3 +1,4 @@
+import Vue from 'vue'
 const state = {
     currentPost: 0,
     posts: {
@@ -11,13 +12,24 @@ const state = {
   const mutations = {
     SET_CURRENT_POST (state, payload) {
         state.currentPost = payload.currentPost;
+        Vue.set(state.posts[payload.currentFeed][payload.currentPost], 'status', true);
     },
     ADD_NEW_POST (state, payload) {
+        state.posts[payload.feedId] = {
+            ...(state.posts[payload.feedId] || {}),
+            [payload.post.link]: payload.post
+        }
+    },
+    SET_POSTS (state, payload) {
+        let links = {};
+        for (let post of payload.posts){
+            links[post.link] = post;
+        }
         state.posts = {
             ...state.posts,
-            [payload.feedId]: { 
+            [payload.feedId]: {
                 ...(state.posts[payload.feedId] || {}),
-                [payload.post.link]: payload.post
+                ...links
             }
         }
     },
