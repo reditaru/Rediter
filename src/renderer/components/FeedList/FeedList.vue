@@ -2,8 +2,21 @@
     <div class="feed-list" v-show="!collapsed" @click="selectCategory">
         <div class="category flex-item sub-item">
             <span class="title" >{{ this.category.name }}</span>
-            <Icon class="icon" name="pencil-square-o" scale="1.0" @click.native="updateCategory"></Icon>
+            <Icon class="icon" name="pencil-square-o" scale="1.0" @click.native="update"></Icon>
             <Icon class="icon" name="trash-o" scale="1.0" @click.native="removeCategory"></Icon>
+            <portal v-if="showModal" to="modal">
+                <form name="category" class="update-category form" @submit.prevent="updateCategory">
+                    <div class="form-item">
+                        <div class="title">Name</div>
+                        <input name="name" type="text" :value="category.name">
+                    </div>
+                    <div class="form-item buttons">
+                        <button type="submit" :class="[categoryLoading? 'btn-loading':'','btn','btn-primary']" :disabled="categoryLoading" @click="updateCategory">
+                            <Spinner v-if="categoryLoading" size="tiny" style="display:inline-block; margin-right: 8px;"></Spinner>
+                            Confirm</button>
+                    </div>
+                </form>
+            </portal>
         </div>
         <div v-show="selected" class="list">
             <SingleFeed v-for="feed in feeds" :feed="feed" :key="feed.id" :active="feed.id == currentFeed" @select="selectFeed" @remove="removeFeed"></SingleFeed>
@@ -50,6 +63,10 @@ import { mapState } from 'vuex';
             selected: {
                 type: Boolean,
                 defalut: false
+            },
+            showModal: {
+                type: Boolean,
+                defalut: false
             }
         },
         data() {
@@ -58,7 +75,10 @@ import { mapState } from 'vuex';
         },
         computed: {
             ...mapState({
-                currentFeed: state => state.Feed.currentFeed
+                currentFeed: state => state.Feed.currentFeed,
+                categoryLoading: state => state.Category.loading,
+                categoryStatus: state => state.Category.status,
+                categoryMsg: state => state.Category.msg,
             })
         },
         methods: {
@@ -69,6 +89,10 @@ import { mapState } from 'vuex';
                 this.$store.commit('Feed/SET_CURRENT_FEED', { currentFeed: id });
             },
             updateCategory(e) {
+                this.$emit('updateCategory', e);
+                e.stopPropagation();
+            },
+            update(e) {
                 this.$emit('update');
                 e.stopPropagation();
             },

@@ -44,9 +44,7 @@
             handleClick(event) {
                 let target = event.target;
                 while(target!==this.$refs.content){
-                    console.log(target.nodeName);
                     if (target.nodeName === 'A') {
-                        console.log(1);
                         shell.openExternal(event.target.href);
                         event.preventDefault();
                         break;

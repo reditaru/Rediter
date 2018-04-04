@@ -11,10 +11,10 @@ const parseFeed = address => {
         const feedParser = new FeedParser();
         request.on('response', (response) => {
             response.pipe(feedParser);
-        })
+        });
         request.on('error', (err) => {
             reject(err);
-        })
+        });
         request.end();
         let meta;
         let items = [];
@@ -35,6 +35,10 @@ const parseFeed = address => {
 }
 
 ipcMain.on('parse-feed', async (event, arg) => {
-    event.sender.send('parse-feed-reply', await parseFeed(arg));
+    let result = await parseFeed(arg)
+        .catch((err) => {
+            return { success: false, err };
+        });
+    event.sender.send('parse-feed-reply', result);
 })
 export default parseFeed;
