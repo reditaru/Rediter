@@ -16,11 +16,8 @@ export async function register(payload) {
         }
     });
 }
-export async function logout(payload) {
+export async function logout() {
     return request('/api/logout', {
-        method: 'POST',
-        data: {
-            ...payload
-        }
+        method: 'POST'
     })
 }

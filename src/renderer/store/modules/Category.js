@@ -1,3 +1,5 @@
+import * as CategoryAPI from '../../services/Category'
+import Vue from 'vue'
 const state = {
     currentCategory: 0,
     categories: {
@@ -25,11 +27,21 @@ const state = {
             ...state.categories
         }
     },
-    UPDATE_CATEGORY (state, payload) {
+    SET_CATEGORY (state, payload) {
         state.categories = {
             ...state.categories,
-            [payload.category.id]: payload.category
+            [payload.id]: payload
         }
+    },
+    SET_CATEGORIES (state, payload) {
+      let result = payload.reduce((a,b) => {
+        a[b.id] = b;
+        return a;
+      },{});
+      state = {
+        ...state,
+        categories: result
+      }
     },
     OPERATION_REQUEST (state) {
       state.loading = true
@@ -46,9 +58,25 @@ const state = {
   }
   
   const actions = {
-    someAsyncTask ({ commit }) {
-      // do something async
-      commit('INCREMENT_MAIN_COUNTER')
+    async getCategories ({ commit }, payload) {
+      commit('OPERATION_REQUEST');
+      let data = (await CategoryAPI.getCategories()).data;
+      if (data.success) {
+        commit('SET_CATEGORIES', data.res);
+        commit('OPERATION_SUCCESS');
+      } else {
+        commit('OPERATION_FAIL', data);
+      }
+    },
+    async createCategory({ commit }, payload) {
+      commit('OPERATION_REQUEST');
+      let data = (await CategoryAPI.createCategory(payload)).data;
+      if (data.success) {
+        commit('SET_CATEGORY', data.res);
+        commit('OPERATION_SUCCESS');
+      } else {
+        commit('OPERATION_FAIL', data);
+      }
     }
   }
   

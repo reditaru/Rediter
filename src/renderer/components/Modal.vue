@@ -1,5 +1,5 @@
 <template>
-    <div ref="mask" :class="[active? 'active':'', modalClass]" @click="close">
+    <div ref="mask" :class="[active? 'active':'', 'modal']" >
         <div class="modal-content">
             <slot></slot>
         </div>
@@ -9,23 +9,19 @@
 <script>
     export default {
         name: 'Modal',
+        props: {
+            active: {
+                type: Boolean,
+                default: false
+            }
+        },
         data() {
             return {
-                modalClass: 'modal',
-                active: false
             }
         },
         computed:{
         },
         methods: {
-            close(e) {
-                if (e.target === this.$refs.mask) {
-                    this.active = false;
-                }
-            },
-            open() {
-                this.active = true;
-            }
         }
     }
 </script>

@@ -8,7 +8,10 @@
             <Icon class="icon" name="plus" scale="1.0"></Icon>
             <span v-show="!collapsed" class="title" >New Feed</span>
             <portal v-if="flags[0]" to="modal" >
-                <form name="feed" class="add-feed form" @submit.prevent="addFeed">
+                <form name="feed" class="add-feed form" @submit.prevent="addFeed" ref="feed">
+                    <div class="msg-box" v-if="!valid">
+                        {{ msg }}
+                    </div>
                     <div class="form-item">
                         <div class="title">Address</div>
                         <input name="address" type="text" placeholder="Enter feed address">
@@ -20,6 +23,9 @@
                         </select>
                     </div>
                     <div class="form-item buttons">
+                        <button type="button" :class="[feedLoading? 'btn-loading':'','btn','btn-red']" :disabled="feedLoading" @click="closeModal('feed')">
+                            Close
+                        </button>
                         <button type="submit" :class="[feedLoading? 'btn-loading':'','btn','btn-primary']" :disabled="feedLoading">
                             <Spinner v-if="feedLoading" size="tiny" style="display:inline-block; margin-right: 8px;"></Spinner>
                             Confirm</button>
@@ -27,20 +33,59 @@
                 </form>
             </portal>
       </div>
-      <div class="flex-item section" @click="openModal(1)">
+      <div class="flex-item section" @click="!isLogin && openModal(1)">
             <Icon class="icon" name="user-o" scale="1.0"></Icon>
-            <span v-show="!collapsed" class="title" >Account</span>
-            <portal v-if="flags[1]" to="modal">
-                <form name="auth" class="login form" @submit.prevent="login">
+            <span v-show="!collapsed" class="title" >{{ user.name || 'Account' }}</span>
+            <Icon v-show="!collapsed && !isLogin" class="icon" name="id-card-o" scale="1.0" @click.native="openRegisterModal"></Icon>
+            <Icon v-show="!collapsed && isLogin" class="icon" name="sign-out" scale="1.0" @click.native="logout"></Icon>
+            <portal v-if="flags[3]" to="modal">
+                <form name="register" class="register form" @submit.prevent="register" ref="register">
+                    <div class="msg-box" v-if="!valid">
+                        {{ msg }}
+                    </div>
                     <div class="form-item">
                         <div class="title">Username</div>
-                        <input name="username" type="text" placeholder="Enter username or email">
+                        <input name="username" type="text" placeholder="Enter username">
+                    </div>
+                    <div class="form-item">
+                        <div class="title">Email</div>
+                        <input name="email" type="text" placeholder="Enter email">
+                    </div>
+                    <div class="form-item">
+                        <div class="title">Password</div>
+                        <input name="password" type="password" placeholder="Enter password">
+                    </div>
+                    <div class="form-item">
+                        <div class="title">Name</div>
+                        <input name="name" type="text" placeholder="Enter name">
+                    </div>
+                    <div class="form-item buttons">
+                        <button type="button" :class="[userLoading? 'btn-loading':'','btn','btn-red']" :disabled="userLoading" @click="closeModal('register')">
+                            Close
+                        </button>
+                        <button type="submit" :class="[userLoading? 'btn-loading':'','btn','btn-primary']" :disabled="userLoading">
+                            <Spinner v-if="userLoading" size="tiny" style="display:inline-block; margin-right: 8px;"></Spinner>
+                            Register</button>
+                    </div>
+                </form>
+            </portal>
+            <portal v-if="flags[1]" to="modal">
+                <form name="auth" class="login form" @submit.prevent="login" ref="auth">
+                    <div class="msg-box" v-if="!valid">
+                        {{ msg }}
+                    </div>
+                    <div class="form-item">
+                        <div class="title">Username</div>
+                        <input name="account" type="text" placeholder="Enter username or email">
                     </div>
                     <div class="form-item">
                         <div class="title">Password</div>
                         <input name="password" type="password" placeholder="Enter password">
                     </div>
                     <div class="form-item buttons">
+                        <button type="button" :class="[userLoading? 'btn-loading':'','btn','btn-red']" :disabled="userLoading" @click="closeModal('auth')">
+                            Close
+                        </button>
                         <button type="submit" :class="[userLoading? 'btn-loading':'','btn','btn-primary']" :disabled="userLoading">
                             <Spinner v-if="userLoading" size="tiny" style="display:inline-block; margin-right: 8px;"></Spinner>
                             Login</button>
@@ -57,12 +102,18 @@
             <Icon class="icon" name="plus" scale="1.0"></Icon>
             <span class="title" >New Category</span>
             <portal v-if="flags[2]" to="modal">
-                <form name="category" class="add-category form" @submit.prevent="addCategory">
+                <form name="category" class="add-category form" @submit.prevent="addCategory" ref="category">
+                    <div class="msg-box" v-if="!valid">
+                        {{ msg }}
+                    </div>
                     <div class="form-item">
                         <div class="title">Name</div>
                         <input name="name" type="text" placeholder="Enter category name">
                     </div>
                     <div class="form-item buttons">
+                        <button type="button" :class="[categoryLoading? 'btn-loading':'','btn','btn-red']" :disabled="categoryLoading" @click="closeModal('category')">
+                            Close
+                        </button>
                         <button type="submit" :class="[categoryLoading? 'btn-loading':'','btn','btn-primary']" :disabled="categoryLoading">
                             <Spinner v-if="categoryLoading" size="tiny" style="display:inline-block; margin-right: 8px;"></Spinner>
                             Confirm</button>
@@ -73,14 +124,16 @@
         <FeedList v-for="category in categories" 
             :key="category.id" 
             :feeds="feeds[category.id]"
-            :showModal="flags[3]"
             :collapsed="collapsed"
             :category="categories[category.id]"
             :selected="category.id == currentCategory"
+            :valid="valid"
+            :msg="msg"
             @select="selectCategory"
-            @update="openModal(3)"
+            @update="openModal(4)"
             @remove="removeCategory"
             @updateCategory="updateCategory"
+            @closeModal="closeModal"
             :ref="category.id">
         </FeedList>
       </div>
@@ -94,10 +147,12 @@
     import Vue from 'vue'
     import { validate } from '../../utils/validate'
     import { mapState } from 'vuex'
+    import "vue-awesome/icons/id-card-o"
     import "vue-awesome/icons/bars"
     import "vue-awesome/icons/plus"
     import "vue-awesome/icons/user-o"
     import "vue-awesome/icons/folder-o"
+    import "vue-awesome/icons/sign-out"
     export default {
         name: "Toolbar",
         components: {
@@ -107,28 +162,94 @@
             return {
                 collapsed: false,
                 flags: [false, false, false, false],
+                valid: true,
+                msg: '',
+                request: false,
                 rules: {
                     feed: {
                         address: {
-                            required: true
+                            required: {
+                                value: true,
+                                msg: 'Please input address!'
+                            }
                         },
                         category: {
-                            required: true
+                            required: {
+                                value: true,
+                                msg: 'Please select category!'
+                            }
                         }
                     },
                     auth: {
-                        username: {
-                            required: true
+                        account: {
+                            required: {
+                                value: true,
+                                msg: 'Please input username!'
+                            }
                         },
                         password: {
-                            required: true,
-                            min: 6,
-                            max: 16
+                            required: {
+                                value: true,
+                                msg: 'Please input password!'
+                            },
+                            min: {
+                                value: 6,
+                                msg: 'Password length cannot be less than 6!'
+                            },
+                            max: {
+                                value: 16,
+                                msg: 'Password length cannot be more than 16!'
+                            }
                         }
                     },
                     category: {
                         name: {
-                            required: true
+                            required: {
+                                value: true,
+                                msg: 'Please input category!'
+                            }
+                        }
+                    },
+                    register: {
+                        name: {
+                            required: {
+                                value: true,
+                                msg: 'Please input name!'
+                            }
+                        },
+                        username: {
+                            required: {
+                                value: true,
+                                msg: 'Please input username!'
+                            },
+                            min: {
+                                value: 6,
+                                msg: 'username length cannot be less than 6!'
+                            },
+                            max: {
+                                value: 16,
+                                msg: 'username length cannot be more than 16!'
+                            }
+                        },
+                        password: {
+                            required: {
+                                value: true,
+                                msg: 'Please input password!'
+                            },
+                            min: {
+                                value: 6,
+                                msg: 'Password length cannot be less than 6!'
+                            },
+                            max: {
+                                value: 16,
+                                msg: 'Password length cannot be more than 16!'
+                            }
+                        },
+                        email: {
+                            required: {
+                                value: true,
+                                msg: 'Please input email!'
+                            },
                         }
                     }
                 }
@@ -145,14 +266,46 @@
                 feedLoading: state => state.Feed.loading,
                 feedStatus: state => state.Feed.status,
                 feedMsg: state => state.Feed.msg,
+                user: state => state.Auth.user,
+                isLogin: state => state.Auth.isLogin,
                 userLoading: state => state.Auth.loading,
                 userStatus: state => state.Auth.status,
                 userMsg: state => state.Auth.msg,
             })
         },
+        watch: {
+            feedLoading(newValue, oldValue) {
+                if(this.request&&!newValue && oldValue) {
+                    this.request = false;
+                    let type = this.feedStatus? 'success':'fail';
+                    let msg = this.feedStatus? 'Operation success!':this.feedMsg;
+                    this.$root.$emit('showAlert', { type: type, message: msg, duration: 3000})
+                }
+            },
+            categoryLoading(newValue, oldValue) {
+                if(this.request&&!newValue && oldValue) {
+                    this.request = false;
+                    let type = this.categoryStatus? 'success':'fail';
+                    let msg = this.categoryStatus? 'Operation success!':this.categoryMsg;
+                    this.$root.$emit('showAlert', { type: type, message: msg, duration: 3000})
+                }
+            },
+            userLoading(newValue, oldValue) {
+                if(this.request&&!newValue && oldValue) {
+                    this.request = false;
+                    let type = this.userStatus? 'success':'fail';
+                    let msg = this.userStatus? 'Operation success!':this.userMsg;
+                    this.$root.$emit('showAlert', { type: type, message: msg, duration: 3000})
+                }
+            }
+        },
         methods: {
             collapse(){
                 this.collapsed = !this.collapsed;
+            },
+            openRegisterModal(e) {
+                this.openModal(3);
+                e.stopPropagation();
             },
             selectCategory(id) {
                 if (this.currentCategory!==id){
@@ -166,41 +319,97 @@
             },
             openModal(index) {
                 this.clearAllFlags();
-                Vue.set(this.flags, index, true);
+                console.log(this.$refs)
+                if (index<this.flags.length)
+                    Vue.set(this.flags, index, true);
                 this.emitOpenModal();
+            },
+            closeModal(ref) {
+                if (typeof ref === 'string') 
+                    ref = this.$refs[ref];
+                this.clearAllFlags();
+                this.resetForm(ref);
+                this.emitCloseModal();
             },
             addFeed(e) {
                 let result = validate(this.rules[e.target.attributes.name.value], e.target.elements);
+                this.request = true;
                 if (result.success) {
+                    this.valid = true;
                     this.$store.dispatch('Feed/requestNewPosts', { address: result.result.address, category: result.result.category });
+                    this.resetForm(e.target);
+                } else {
+                    this.valid = false;
+                    this.msg = result.msg;
                 }
             },
             login(e) {
                 let result = validate(this.rules[e.target.attributes.name.value], e.target.elements);
+                this.request = true;
                 if (result.success) {
-                    
+                    this.valid = true;
+                    this.$store.dispatch('Auth/login', result.result);
+                    this.$store.dispatch('Category/getCategories', null);
+                    this.resetForm(e.target);
+                    this.emitCloseModal();
+                } else {
+                    this.valid = false;
+                    this.msg = result.msg;
                 }
+            },
+            register(e) {
+                let result = validate(this.rules[e.target.attributes.name.value], e.target.elements);
+                this.request = true;
+                if (result.success) {
+                    this.valid = true;
+                    this.$store.dispatch('Auth/register', result.result);
+                    this.resetForm(e.target);
+                    this.emitCloseModal(); 
+                } else {
+                    this.valid = false;
+                    this.msg = result.msg;
+                }
+            },
+            logout(e) {
+                this.$store.dispatch('Auth/logout');
             },
             addCategory(e) {
                 let result = validate(this.rules[e.target.attributes.name.value], e.target.elements);
+                this.request = true;
                 if (result.success) {
-                    
+                    this.valid = true;
+                    this.$store.dispatch('Category/createCategory', result.result);
+                    this.resetForm(e.target);
+                    this.emitCloseModal(); 
+                } else {
+                    this.valid = false;
+                    this.msg = result.msg;
                 }
             },
             updateCategory(e) {
                 let result = validate(this.rules[e.target.attributes.name.value], e.target.elements);
-                                console.log(result)
                 if (result.success) {
-                    
+                    this.valid = true;
+                } else {
+                    this.valid = false;
+                    this.msg = result.msg;
                 }
+            },
+            resetForm(elem) {
+                if(elem && elem.reset) elem.reset();
             },
             emitOpenModal() {
                 this.$emit('openModal');
+            },
+            emitCloseModal() {
+                this.$emit('closeModal');
             },
             clearAllFlags() {
                 for (let i=0;i<this.flags.length;i++) {
                     this.flags[i] = false;
                 }
+                this.valid = true;
+                this.msg = '';
             }
         }
     }
@@ -228,6 +437,12 @@
         color: white;
         .icon {
             padding: 0 15px;
+            &:hover {
+                color: rgb(86, 187, 209);
+            }
+            &:active {
+                color: rgb(54, 117, 131);
+            }
         }
         .title {
             width: 200px;
@@ -262,11 +477,13 @@
             display: flex;
             .title {
                 display: flex;
+                width: 80px;
                 align-items: center;
+                justify-content: flex-end;
                 font-weight: bold;
                 margin-right: 10px;
             }
-            input {
+            input, select {
                 flex: 1;
                 margin: 0;
                 overflow: visible;
@@ -288,6 +505,7 @@
             justify-content: flex-end;
             button {
                 display: flex;
+                flex: 0 80px;
                 align-items: center;
             }
         }
@@ -301,11 +519,14 @@
         border: 1px solid transparent;
         padding: .375rem .75rem;
         font-size: 1rem;
+        margin: 1px 5px;
         line-height: 1.5;
         border-radius: .25rem;
         transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;
         text-indent: 0px;
         text-shadow: none;
+        display: flex;
+        justify-content: center;
     }
     .btn-primary {
         color: #fff;
@@ -320,9 +541,31 @@
             border-color: #00448e;
         }
     }
+    .btn-red {
+        color: #fff;
+        background-color: #dc3545;
+        border-color: #dc3545;
+        &:hover {
+            background-color: #ba2c3a;
+            border-color: #ba2c3a;
+        }
+        &:active {
+            background-color: #8d212c;
+            border-color: #8d212c;
+        }
+    }
     .btn-loading {
-        background-color: #808080;
-        border-color: #808080;
+        background-color: #808080 !important;
+        border-color: #808080 !important;
+    }
+    .msg-box {
+        background-color: rgb(255, 115, 115);
+        color: white;
+        padding: 5px 20px;
+        margin: 0px 16px;
+        overflow: hidden;
+        opacity: 0.6;
+        border-radius: 6px;
     }
 </style>
 

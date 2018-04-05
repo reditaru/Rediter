@@ -17,13 +17,13 @@ export function validate(rules, elems) {
         }
         let value = elems[field].value;
         Object.keys(rules[field]).every((cond) => {
-            if (ruleFunction[cond](rules[field][cond])(value)){
+            if (ruleFunction[cond](rules[field][cond].value)(value)){
                 result[field] = value;
                 return true;
             }
             else {
                 f2 = false;
-                msg = `Field ${field} disobey the ${cond} rule!`;
+                msg = rules[field][cond].msg;
                 return false;
             }
         });

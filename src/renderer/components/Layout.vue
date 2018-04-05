@@ -1,9 +1,9 @@
 <template>
     <div id="container">
-        <Toolbar @openModal="openModal"></Toolbar>
+        <Toolbar @openModal="openModal" @closeModal="closeModal"></Toolbar>
         <PostList></PostList>
         <ContentArea></ContentArea>
-        <Modal ref="modal">
+        <Modal ref="modal" :active="modalActive">
             <portal-target name="modal"></portal-target>
         </Modal>
     </div>
@@ -21,11 +21,15 @@
         },
         data() {
             return {
+                modalActive: false
             }
         },
         methods: {
             openModal() {
-                this.$refs.modal.open();
+                this.modalActive = true;
+            },
+            closeModal() {
+                this.modalActive = false;
             }
         }
     }

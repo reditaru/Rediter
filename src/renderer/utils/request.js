@@ -1,5 +1,6 @@
 import axios from 'axios'
 import auth  from './auth'
+import config from '../config'
 function handleError(response) {
     let promise;
     if (promise == null) {
@@ -23,7 +24,7 @@ export default function request(url, options) {
     if(token!=null)
         options.headers['Authorization'] = token;
     options.headers['Content-Type'] = 'application/json';
-    options.url = url;
+    options.url = config.host + url;
     options.responseType = 'json'
     return axios(options)
         .then((data) => {

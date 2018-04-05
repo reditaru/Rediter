@@ -4,21 +4,27 @@
             <span class="title" >{{ this.category.name }}</span>
             <Icon class="icon" name="pencil-square-o" scale="1.0" @click.native="update"></Icon>
             <Icon class="icon" name="trash-o" scale="1.0" @click.native="removeCategory"></Icon>
-            <portal v-if="showModal" to="modal">
-                <form name="category" class="update-category form" @submit.prevent="updateCategory">
+            <portal v-if="flag" to="modal">
+                <form name="category" class="update-category form" @submit.prevent="updateCategory" ref="category">
+                    <div class="msg-box" v-if="!valid">
+                        {{ msg }}
+                    </div>
                     <div class="form-item">
                         <div class="title">Name</div>
                         <input name="name" type="text" :value="category.name">
                     </div>
                     <div class="form-item buttons">
-                        <button type="submit" :class="[categoryLoading? 'btn-loading':'','btn','btn-primary']" :disabled="categoryLoading" @click="updateCategory">
+                        <button type="button" :class="[categoryLoading? 'btn-loading':'','btn','btn-red']" :disabled="categoryLoading" @click="closeModal">
+                            Close
+                        </button>
+                        <button type="submit" :class="[categoryLoading? 'btn-loading':'','btn','btn-primary']" :disabled="categoryLoading">
                             <Spinner v-if="categoryLoading" size="tiny" style="display:inline-block; margin-right: 8px;"></Spinner>
-                            Confirm</button>
+                            Update</button>
                     </div>
                 </form>
             </portal>
         </div>
-        <div v-show="selected" class="list">
+        <div v-show="selected && feeds" class="list">
             <SingleFeed v-for="feed in feeds" :feed="feed" :key="feed.id" :active="feed.id == currentFeed" @select="selectFeed" @remove="removeFeed"></SingleFeed>
         </div>
     </div>
@@ -64,13 +70,18 @@ import { mapState } from 'vuex';
                 type: Boolean,
                 defalut: false
             },
-            showModal: {
+            valid: {
                 type: Boolean,
-                defalut: false
+                defalut: true
+            },
+            msg: {
+                type: String,
+                defalut: ''
             }
         },
         data() {
             return {
+                flag: false
             }
         },
         computed: {
@@ -93,6 +104,7 @@ import { mapState } from 'vuex';
                 e.stopPropagation();
             },
             update(e) {
+                this.flag = true;
                 this.$emit('update');
                 e.stopPropagation();
             },
@@ -103,8 +115,13 @@ import { mapState } from 'vuex';
             removeFeed(id) {
 
             },
-            clearCurrentFeed(){
+            clearCurrentFeed() {
                 this.$store.commit('Feed/SET_CURRENT_FEED', { currentFeed: 0 });
+            },
+            closeModal(ref) {
+                this.flag = false;
+                console.log(this.$refs,this.$refs.category);
+                this.$emit('closeModal', this.$refs["category"]);
             }
         }
     }

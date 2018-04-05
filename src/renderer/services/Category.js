@@ -1,6 +1,6 @@
 import request from '../utils/request'
 
-export async function getCategories(payload) {
+export async function getCategories() {
     return request('/api/categories', {
         method: 'GET'
     });
@@ -21,5 +21,13 @@ export async function updateCategory(payload) {
 export async function deleteCategory(payload) {
     return request('/api/category/' + payload.category.id, {
         method: 'DELETE'
+    });
+}
+export async function createCategory(payload) {
+    return request('/api/categories', {
+        method: 'POST',
+        data: {
+            ...payload
+        }
     });
 }
