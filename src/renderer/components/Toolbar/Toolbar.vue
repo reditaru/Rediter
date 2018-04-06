@@ -121,21 +121,23 @@
                 </form>
             </portal>
         </div>
-        <FeedList v-for="category in categories" 
-            :key="category.id" 
-            :feeds="feeds[category.id]"
-            :collapsed="collapsed"
-            :category="categories[category.id]"
-            :selected="category.id == currentCategory"
-            :valid="valid"
-            :msg="msg"
-            @select="selectCategory"
-            @update="openModal(4)"
-            @remove="removeCategory"
-            @updateCategory="updateCategory"
-            @closeModal="closeModal"
-            :ref="category.id">
-        </FeedList>
+        <div v-if="categories">
+            <FeedList v-for="category in categories" 
+                :key="category.id" 
+                :feeds="feeds[category.id]"
+                :collapsed="collapsed"
+                :category="categories[category.id]"
+                :selected="category.id == currentCategory"
+                :valid="valid"
+                :msg="msg"
+                @select="selectCategory"
+                @update="openModal(4)"
+                @remove="removeCategory"
+                @updateCategory="updateCategory"
+                @closeModal="closeModal"
+                ref="feedList">
+            </FeedList>
+        </div>
       </div>
   </div>
 </template>
@@ -309,17 +311,26 @@
             },
             selectCategory(id) {
                 if (this.currentCategory!==id){
-                    if (this.currentCategory !== 0)
-                        this.$refs[this.currentCategory][0].clearCurrentFeed();
+                    if (this.currentCategory !== 0){
+                        for(let ref of this.$refs["feedList"]){
+                            if(ref.category.id === this.currentCategory){
+                                ref.clearCurrentFeed();
+                            }
+                        }
+                    }
+                    if (!this.feeds[id]){
+                        this.request = true;
+                        this.$store.dispatch('Feed/getFeeds', { id });
+                    }
                     this.$store.commit('Category/SET_CURRENT_CATEGORY', { currentCategory: id });
                 }
             },
             removeCategory(id) {
-
+                this.request = true;
+                this.$store.dispatch('Category/deleteCategory', { id });
             },
             openModal(index) {
                 this.clearAllFlags();
-                console.log(this.$refs)
                 if (index<this.flags.length)
                     Vue.set(this.flags, index, true);
                 this.emitOpenModal();
@@ -331,65 +342,72 @@
                 this.resetForm(ref);
                 this.emitCloseModal();
             },
-            addFeed(e) {
+            async addFeed(e) {
                 let result = validate(this.rules[e.target.attributes.name.value], e.target.elements);
                 this.request = true;
                 if (result.success) {
                     this.valid = true;
-                    this.$store.dispatch('Feed/requestNewPosts', { address: result.result.address, category: result.result.category });
+                    await this.$store.dispatch('Feed/addNewFeed', { address: result.result.address, category: result.result.category });
                     this.resetForm(e.target);
-                } else {
-                    this.valid = false;
-                    this.msg = result.msg;
-                }
-            },
-            login(e) {
-                let result = validate(this.rules[e.target.attributes.name.value], e.target.elements);
-                this.request = true;
-                if (result.success) {
-                    this.valid = true;
-                    this.$store.dispatch('Auth/login', result.result);
-                    this.$store.dispatch('Category/getCategories', null);
-                    this.resetForm(e.target);
+                    Vue.set(this.flags, 0, false);
                     this.emitCloseModal();
                 } else {
                     this.valid = false;
                     this.msg = result.msg;
                 }
             },
-            register(e) {
+            async login(e) {
                 let result = validate(this.rules[e.target.attributes.name.value], e.target.elements);
                 this.request = true;
                 if (result.success) {
                     this.valid = true;
-                    this.$store.dispatch('Auth/register', result.result);
+                    await this.$store.dispatch('Auth/login', result.result);
                     this.resetForm(e.target);
+                    Vue.set(this.flags, 1, false);
+                    this.emitCloseModal();
+                } else {
+                    this.valid = false;
+                    this.msg = result.msg;
+                }
+            },
+            async register(e) {
+                let result = validate(this.rules[e.target.attributes.name.value], e.target.elements);
+                this.request = true;
+                if (result.success) {
+                    this.valid = true;
+                    await this.$store.dispatch('Auth/register', result.result);
+                    this.resetForm(e.target);
+                    Vue.set(this.flags, 3, false);
                     this.emitCloseModal(); 
                 } else {
                     this.valid = false;
                     this.msg = result.msg;
                 }
             },
-            logout(e) {
-                this.$store.dispatch('Auth/logout');
+            async logout(e) {
+                await this.$store.dispatch('Auth/logout');
             },
-            addCategory(e) {
+            async addCategory(e) {
                 let result = validate(this.rules[e.target.attributes.name.value], e.target.elements);
                 this.request = true;
                 if (result.success) {
                     this.valid = true;
-                    this.$store.dispatch('Category/createCategory', result.result);
+                    await this.$store.dispatch('Category/createCategory', result.result);
                     this.resetForm(e.target);
+                    Vue.set(this.flags, 2, false);
                     this.emitCloseModal(); 
                 } else {
                     this.valid = false;
                     this.msg = result.msg;
                 }
             },
-            updateCategory(e) {
+            async updateCategory({ e, id }) {
                 let result = validate(this.rules[e.target.attributes.name.value], e.target.elements);
                 if (result.success) {
                     this.valid = true;
+                    await this.$store.dispatch('Category/updateCategory', { ...result.result, id: id});
+                    this.resetForm(e.target);
+                    this.emitCloseModal(); 
                 } else {
                     this.valid = false;
                     this.msg = result.msg;

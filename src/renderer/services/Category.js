@@ -11,15 +11,15 @@ export async function getCategory(payload) {
     });
 }
 export async function updateCategory(payload) {
-    return request('/api/category/' + payload.category.id, {
+    return request('/api/category/' + payload.id, {
         method: 'PUT',
         data: {
-            ...payload.category
+            name: payload.name
         }
     });
 }
 export async function deleteCategory(payload) {
-    return request('/api/category/' + payload.category.id, {
+    return request('/api/category/' + payload.id, {
         method: 'DELETE'
     });
 }

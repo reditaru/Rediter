@@ -33,13 +33,14 @@
 <script>
     import SingleFeed from './SingleFeed'
     import Icon from "vue-awesome/components/Icon"
+    import Spinner from 'vue-simple-spinner'
     import "vue-awesome/icons/trash-o"
     import "vue-awesome/icons/pencil-square-o"
-import { mapState } from 'vuex';
+    import { mapState } from 'vuex';
     export default {
         name: "FeedList",
         components: {
-            SingleFeed, Icon
+            SingleFeed, Icon, Spinner
         },
         props: {
             category: {
@@ -81,7 +82,8 @@ import { mapState } from 'vuex';
         },
         data() {
             return {
-                flag: false
+                flag: false,
+                request: false
             }
         },
         computed: {
@@ -100,7 +102,8 @@ import { mapState } from 'vuex';
                 this.$store.commit('Feed/SET_CURRENT_FEED', { currentFeed: id });
             },
             updateCategory(e) {
-                this.$emit('updateCategory', e);
+                this.request = true;
+                this.$emit('updateCategory', { e: e, id: this.category.id});
                 e.stopPropagation();
             },
             update(e) {
@@ -120,8 +123,17 @@ import { mapState } from 'vuex';
             },
             closeModal(ref) {
                 this.flag = false;
-                console.log(this.$refs,this.$refs.category);
                 this.$emit('closeModal', this.$refs["category"]);
+            }
+        },
+        watch: {
+            categoryLoading(newValue, oldValue) {
+                if(this.request&&!newValue && oldValue) {
+                    this.request = false;
+                    let type = this.categoryStatus? 'success':'fail';
+                    let msg = this.categoryStatus? 'Operation success!':this.categoryMsg;
+                    this.$root.$emit('showAlert', { type: type, message: msg, duration: 3000})
+                }
             }
         }
     }

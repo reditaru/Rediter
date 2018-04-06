@@ -3,14 +3,7 @@ import Vue from 'vue'
 const state = {
     currentCategory: 0,
     categories: {
-      1: {
-        id: 1,
-        name: 'Test Category'
-      },
-      2: {
-        id: 2,
-        name: 'Y Cate'
-      }
+
     },
     loading: false,
     status: false,
@@ -22,10 +15,7 @@ const state = {
       state.currentCategory = payload.currentCategory;
     },
     DELETE_CATEGORY (state, payload) {
-        delete state[payload.id];
-        state.categories = {
-            ...state.categories
-        }
+        Vue.delete(state.categories,payload.id);
     },
     SET_CATEGORY (state, payload) {
         state.categories = {
@@ -33,15 +23,15 @@ const state = {
             [payload.id]: payload
         }
     },
+    CLEAR_CATEGORIES (state) {
+      Vue.set(state, 'categories', {});
+    },
     SET_CATEGORIES (state, payload) {
       let result = payload.reduce((a,b) => {
         a[b.id] = b;
         return a;
       },{});
-      state = {
-        ...state,
-        categories: result
-      }
+      Vue.set(state, 'categories', result);
     },
     OPERATION_REQUEST (state) {
       state.loading = true
@@ -60,22 +50,62 @@ const state = {
   const actions = {
     async getCategories ({ commit }, payload) {
       commit('OPERATION_REQUEST');
-      let data = (await CategoryAPI.getCategories()).data;
-      if (data.success) {
-        commit('SET_CATEGORIES', data.res);
-        commit('OPERATION_SUCCESS');
+      let data = await CategoryAPI.getCategories();
+      if (data && data.data) {
+        data = data.data;
+        if (data.success) {
+          commit('SET_CATEGORIES', data.res);
+          commit('OPERATION_SUCCESS');
+        } else {
+          commit('OPERATION_FAIL', data);
+        }
       } else {
-        commit('OPERATION_FAIL', data);
+        commit('OPERATION_FAIL', { msg: 'Meet some unknown error!'});
       }
     },
     async createCategory({ commit }, payload) {
       commit('OPERATION_REQUEST');
-      let data = (await CategoryAPI.createCategory(payload)).data;
-      if (data.success) {
-        commit('SET_CATEGORY', data.res);
-        commit('OPERATION_SUCCESS');
+      let data = await CategoryAPI.createCategory(payload);
+      if (data && data.data) {
+        data = data.data;
+        if (data.success) {
+          commit('SET_CATEGORY', data.res);
+          commit('OPERATION_SUCCESS');
+        } else {
+          commit('OPERATION_FAIL', data);
+        }
       } else {
-        commit('OPERATION_FAIL', data);
+        commit('OPERATION_FAIL', { msg: 'Meet some unknown error!'});
+      }
+    },
+    async updateCategory({ commit }, payload) {
+      commit('OPERATION_REQUEST');
+      let data = await CategoryAPI.updateCategory(payload);
+      if (data && data.data) {
+        data = data.data;
+        if (data.success) {
+          commit('SET_CATEGORY', data.res);
+          commit('OPERATION_SUCCESS');
+        } else {
+          commit('OPERATION_FAIL', data);
+        }
+      } else {
+        commit('OPERATION_FAIL', { msg: 'Meet some unknown error!'});
+      }
+    },
+    async deleteCategory({ commit }, payload) {
+      commit('OPERATION_REQUEST');
+      let data = await CategoryAPI.deleteCategory(payload);
+      if (data && data.data) {
+        data = data.data;
+        if (data.success) {
+          commit('DELETE_CATEGORY', payload);
+          commit('OPERATION_SUCCESS');
+        } else {
+          commit('OPERATION_FAIL', data);
+        }
+      } else {
+        commit('OPERATION_FAIL', { msg: 'Meet some unknown error!'});
       }
     }
   }

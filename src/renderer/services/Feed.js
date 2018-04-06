@@ -18,3 +18,16 @@ export async function getFeedPosts(payload) {
         return { success: false }
     });
 }
+export async function createFeed(payload) {
+    return request('/api/category/' + payload.categoryId + '/feeds', {
+        method: 'POST',
+        data: {
+            address: payload.address
+        }
+    });
+}
+export async function getFeeds(payload) {
+    return request('/api/category/' + payload.id, {
+        method: 'GET'
+    });
+}

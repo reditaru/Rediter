@@ -32,30 +32,45 @@
   }
   
   const actions = {
-    async login ({ commit }, payload) {
+    async login ({ dispatch, commit }, payload) {
       commit('OPERATION_REQUEST');
-      let data = (await AuthAPI.login(payload)).data;
-      if (data.success) {
-        commit('SET_CURRENT_USER', data.res);
-        auth.setAuth(data.res.token);
-        commit('SET_LOGIN_STATUS', true);
-        commit('OPERATION_SUCCESS');
+      let data = await AuthAPI.login(payload);
+      if (data && data.data) {
+        data = data.data;
+        if (data.success) {
+          commit('SET_CURRENT_USER', data.res);
+          auth.setAuth(data.res.token);
+          dispatch('Category/getCategories', null, { root: true });
+          commit('SET_LOGIN_STATUS', true);
+          commit('OPERATION_SUCCESS');
+        } else {
+          commit('OPERATION_FAIL', data);
+        }
       } else {
-        commit('OPERATION_FAIL', data);
+        commit('OPERATION_FAIL', { msg: 'Meet some unknown error!'});
       }
     },
     async register({ commit }, payload) {
       commit('OPERATION_REQUEST');
-      let data = (await AuthAPI.register(payload)).data;
-      if (data.success) {
-        commit('OPERATION_SUCCESS');
+      let data = await AuthAPI.register(payload);
+      if (data && data.data) {
+        data = data.data;
+        if (data.success) {
+          commit('OPERATION_SUCCESS');
+        } else {
+          commit('OPERATION_FAIL', data);
+        }
       } else {
-        commit('OPERATION_FAIL', data);
+        commit('OPERATION_FAIL', { msg: 'Meet some unknown error!'});
       }
     },
     async logout({ commit }, payload) {
       commit('OPERATION_REQUEST');
-      let data = await AuthAPI.logout(payload);
+      //let data = await AuthAPI.logout(payload);
+      commit('SET_CURRENT_USER', {});
+      commit('SET_LOGIN_STATUS', false);
+      commit('Category/CLEAR_CATEGORIES', null, { root: true });
+      commit('Feed/CLEAR_FEEDS', null, { root: true });
       auth.clearAuth();
       commit('OPERATION_SUCCESS');
     }
