@@ -41,10 +41,7 @@ const state = {
         }
     },
     DELETE_FEED (state, payload) {
-        delete state[payload.id][payload.feedId];
-        state.feeds = {
-            ...state.feeds
-        }
+        Vue.delete(state.feeds[payload.category], payload.id);
     },
     SET_FEEDS (state, payload) {
         let result = payload.feeds.reduce((a, b) => {
@@ -103,6 +100,21 @@ const state = {
             data = data.data;
             if (data.success) {
                 commit('SET_FEEDS', { id: data.res.id, feeds: data.res.feeds });
+                commit('OPERATION_SUCCESS');
+            } else {
+                commit('OPERATION_FAIL', { msg: data.msg || 'Meet some unknown error!'});
+            }
+        } else {
+            commit('OPERATION_FAIL', { msg: 'Meet some unknown error!'});
+        }
+    },
+    async removeFeed({ commit }, payload) {
+        commit('OPERATION_REQUEST');
+        let data = await FeedApi.deleteFeed(payload);
+        if (data && data.data) {
+            data = data.data;
+            if (data.success) {
+                commit('DELETE_FEED', { ...payload });
                 commit('OPERATION_SUCCESS');
             } else {
                 commit('OPERATION_FAIL', { msg: data.msg || 'Meet some unknown error!'});

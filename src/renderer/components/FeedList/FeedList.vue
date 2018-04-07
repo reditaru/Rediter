@@ -116,7 +116,7 @@
                 e.stopPropagation();
             },
             removeFeed(id) {
-
+                this.$store.dispatch('Feed/removeFeed', { category: this.category.id, id });
             },
             clearCurrentFeed() {
                 this.$store.commit('Feed/SET_CURRENT_FEED', { currentFeed: 0 });

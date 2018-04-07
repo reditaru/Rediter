@@ -3,7 +3,7 @@ import electron, { ipcRenderer } from 'electron'
 import FeedParser from 'feedparser'
 
 export async function deleteFeed(payload) {
-    return request('/api/category/' + payload.categoryId + '/' + payload.feedId, {
+    return request('/api/category/' + payload.category + '/' + payload.id, {
         method: 'DELETE'
     });
 }

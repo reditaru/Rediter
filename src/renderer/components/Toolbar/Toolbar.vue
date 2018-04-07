@@ -385,6 +385,7 @@
                 }
             },
             async logout(e) {
+                this.request = true;
                 await this.$store.dispatch('Auth/logout');
             },
             async addCategory(e) {
