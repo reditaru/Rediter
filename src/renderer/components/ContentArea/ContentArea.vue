@@ -45,7 +45,7 @@
                 let target = event.target;
                 while(target!==this.$refs.content){
                     if (target.nodeName === 'A') {
-                        shell.openExternal(event.target.href);
+                        shell.openExternal(target.href);
                         event.preventDefault();
                         break;
                     }

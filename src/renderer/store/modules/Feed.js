@@ -48,6 +48,7 @@ const state = {
             a[b.id] = b;
             return a;
         }, {});
+        result = { ...state.feeds[payload.id], ...result };
         Vue.set(state.feeds, payload.id, result);
     },
     CLEAR_FEEDS (state) {
@@ -71,9 +72,12 @@ const state = {
     async requestNewPosts ({ commit }, payload) {
         commit('OPERATION_REQUEST');
         let data = await FeedApi.getFeedPosts(payload);
+        let data2 = await FeedApi.getLocalPosts(payload);
+        console.log(data2);
         if (data && data.success) {
                 commit('OPERATION_SUCCESS');
                 commit('Post/SET_POSTS', { feedId: payload.id, posts: data.items }, { root: true });
+                //commit('Post/SET_POSTS', { feedId: payload.id, posts: data2 }, { root: true });
         } else {
                 commit('OPERATION_FAIL', { msg: 'Request failed!' });
         };

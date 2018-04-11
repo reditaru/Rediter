@@ -1,4 +1,5 @@
 import Vue from 'vue'
+import * as FeedApi from '../../services/Feed'
 const state = {
     currentPost: 0,
     posts: {
@@ -54,9 +55,8 @@ const state = {
   }
   
   const actions = {
-    requestNewPosts ({ commit }) {
-      // do something async
-      commit('INCREMENT_MAIN_COUNTER')
+    async saveToLocal ({ commit, state }) {
+        await FeedApi.setLocalPosts(state.posts);
     }
   }
   

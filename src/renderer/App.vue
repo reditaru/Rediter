@@ -26,6 +26,9 @@
             this.alert.visible = false;
           }, duration || 1500);
         });
+        window.onbeforeunload = (e) => {
+          this.$store.dispatch('Post/saveToLocal');
+        }
     }
   }
 </script>

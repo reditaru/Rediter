@@ -2,19 +2,20 @@
     <div id="post-list">
         <div class="flex-item header"></div>
         <div class="flex-item section tools">
-            <input placeholder="Search" >
+            <input placeholder="Search"  v-model="searchText">
             <Icon class="icon" name="refresh" scale="1.5" @click.native="refresh()"></Icon>
         </div>
         <div class="flex-item posts">
             <h2>Posts</h2>
         </div>
-        <div v-if="posts[currentFeed]" class="list">
+        <Spinner v-if="loading" style="margin-top:8px; margin-bottom:8px;"></Spinner>
+        <div v-if="!empty" class="list">
             <template v-for="(value, key) in datas">
                 <SingleDate :key="key" :date="key"></SingleDate>
                 <SinglePost v-for="post in value" :key="post.link" :post="post" @select="selectPost" :active="post.link === currentPost"></SinglePost>
             </template>
         </div>
-        <div v-else class="empty-msg">
+        <div v-if="!loading && empty" class="empty-msg">
             <h4>Empty Post List!</h4>
         </div>
     </div>
@@ -26,11 +27,23 @@
     import "vue-awesome/icons/refresh"
     import SingleDate from "./SingleDate"
     import SinglePost from "./SinglePost"
+    import Spinner from 'vue-simple-spinner'
     import moment from 'moment'
     export default {
         name: 'PostList',
+        data() {
+            return {
+                searchText: '',
+                actualText: []
+            }
+        },
         components: {
-            Icon, SinglePost, SingleDate
+            Icon, SinglePost, SingleDate, Spinner
+        },
+        watch: {
+            searchText (newValue, oldValue) {
+                this.changeText();
+            }
         },
         computed: {
             ...mapState({
@@ -44,30 +57,45 @@
                 msg: state => state.Feed.msg
             }),
             datas() {
-                let result = {}
+                let result = {};
                 if (this.posts[this.currentFeed]) {
                     Object.keys(this.posts[this.currentFeed]).forEach((key) => {
-                        let date = moment(this.posts[this.currentFeed][key].date).format('MMM DD, YYYY');
-                        if (!result[date]) {
-                            result[date] = [];
+                        let data = this.posts[this.currentFeed][key];
+                        let flag = false;
+                        if (this.actualText.length !== 0) {
+                            this.actualText.forEach((item) => {
+                                if (data.summary.includes(item) || data.title.includes(item)) {
+                                    flag = true;
+                                }
+                            });
+                        } else {
+                            flag = true;
                         }
-                        result[date].push(this.posts[this.currentFeed][key]);
-                    })
+                        if (flag) {
+                            let date = moment(data.date).format('MMM DD, YYYY');
+                            if (!result[date]) {
+                                result[date] = [];
+                            }
+                            result[date].push(data);
+                        }
+                    });
+                    result = Object.keys(result).sort((a, b) => {
+                            return moment(b, 'MMM DD, YYYY').unix() - moment(a, 'MMM DD, YYYY').unix();
+                        })
+                        .reduce((a, v) => {
+                            a[v] = result[v];
+                            return a;
+                        }, {});
+                    Object.keys(result).forEach((key) => {
+                        result[key].sort((a, b) => {
+                            return moment(b.date).unix() - moment(a.date).unix()
+                        });
+                    });
                 }
-                result = Object.keys(result).sort((a, b) => {
-                        return moment(b, 'MMM DD, YYYY').unix() - moment(a, 'MMM DD, YYYY').unix();
-                    })
-                    .reduce((a, v) => {
-                        a[v] = result[v];
-                        return a;
-                    }, {});
-                Object.keys(result).forEach((key) => {
-                    result[key].sort((a, b) => {
-                        return moment(b.date).unix() - moment(a.date).unix()
-                    })
-                });
-                console.log(result);
                 return result;
+            },
+            empty() {
+                return Object.keys(this.datas).length === 0;
             }
         },
         methods: {
@@ -82,6 +110,11 @@
                     this.$store.commit('Post/SET_CURRENT_POST', { currentPost: link, currentFeed: this.currentFeed });
                 }
             }
+        },
+        mounted() {
+            this.changeText = this._.debounce(function(){
+                    this.actualText = this.searchText.replace(/(^\s*)|(\s*$)/g, "").split(/\s+/);
+            }, 500);
         },
         beforeUpdate() {
             if (!this.posts[this.currentFeed]) {

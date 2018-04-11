@@ -1,11 +1,11 @@
 export default {
     getAuth() {
-        return sessionStorage.getItem('token');
+        return localStorage.getItem('token');
     },
     setAuth(token, type='Bearer') {
-        sessionStorage.setItem('token', `${type} ${token}`);
+        localStorage.setItem('token', `${type} ${token}`);
     },
     clearAuth() {
-        sessionStorage.clear()
+        localStorage.clear()
     }
 }

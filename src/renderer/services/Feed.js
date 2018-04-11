@@ -31,3 +31,27 @@ export async function getFeeds(payload) {
         method: 'GET'
     });
 }
+
+export async function getLocalPosts(payload) {
+    return new Promise((resolve, reject) => {
+        ipcRenderer.once('read-posts-reply', (event, arg) => {
+            resolve(arg);
+        });
+        ipcRenderer.send('read-posts', payload);
+    })
+    .catch(err => {
+        return { success: false }
+    });
+}
+
+export async function setLocalPosts(payload) {
+    return new Promise((resolve, reject) => {
+        ipcRenderer.once('write-posts-reply', (event, arg) => {
+            resolve(arg);
+        });
+        ipcRenderer.send('write-posts', payload);
+    })
+    .catch(err => {
+        return { success: false }
+    });
+}

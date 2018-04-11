@@ -40,6 +40,7 @@
         if (data.success) {
           commit('SET_CURRENT_USER', data.res);
           auth.setAuth(data.res.token);
+          localStorage.setItem('user', JSON.stringify(data.res));
           dispatch('Category/getCategories', null, { root: true });
           commit('SET_LOGIN_STATUS', true);
           commit('OPERATION_SUCCESS');
