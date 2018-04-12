@@ -9,7 +9,7 @@
             <span class="date">发布于 {{ date }} </span>
             <Icon class="icon share" name="share" scale="1.8" @click.native="copy"></Icon>
         </div>
-        <div ref="content" v-html="post.description" @click="handleClick"></div>
+        <div style="width: 100%;" ref="content" v-html="description" @click="handleClick"></div>
     </div>
 </template>
 
@@ -42,6 +42,11 @@
                 }
                 return this.lastPost;
             },
+            description() {
+                return this.post? this.post.description
+                                            .replace(/<img(.*?)src="\/(.*)?"/g, `<img$1 src="${this.extractUrl(this.post.link)}/$2"`)
+                                            .replace(/<img(.*?)(style="(.*?)")?/g, `<img$1 style="$3; max-width:100%;"`) : '';
+            },
             date() {
                 return this.post? moment(this.post.date).format('dddd, MMMM Do YYYY, h:mm:ss a') : '';
             }
@@ -61,6 +66,9 @@
             copy(event) {
                 this.$root.$emit('showAlert', { type: "success", message: "Copied to clipboard!", duration: 3000});
                 clipboard.writeText(this.post.link);
+            },
+            extractUrl(url) {
+                return url.split('/').slice(0,3).join('/');
             }
         }
     }
