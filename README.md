@@ -1,7 +1,9 @@
 # rediter
 
-> an simple rss reader powered by electron and vue 
+> 基于electron-vue 和 vue 的自用RSS Reader, 顺便熟悉 electron
 
+#### ScreenShot
+![ScreenShot]()
 #### Build Setup
 
 ``` bash

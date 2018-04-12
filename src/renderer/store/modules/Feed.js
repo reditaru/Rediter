@@ -59,10 +59,10 @@ const state = {
             .then((res) => {
                 let data = res[0];
                 let localData = res[1];
-                if (data && data.success && (!payload.local || (payload.local && localData && localData.success))) {
+                if (data && data.success && (!payload.local || (payload.local && localData))) {
                         commit('OPERATION_SUCCESS');
                         commit('Post/SET_POSTS', { feedId: payload.id, posts: data.items }, { root: true });
-                        if (payload.local)
+                        if (payload.local && localData.success)
                             commit('Post/SET_POSTS', { feedId: payload.id, posts: localData.res }, { root: true });
                 } else {
                         commit('OPERATION_FAIL', { msg: 'Request failed!' });
