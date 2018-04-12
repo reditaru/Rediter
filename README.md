@@ -3,7 +3,7 @@
 > 基于electron-vue 和 vue 的自用RSS Reader, 顺便熟悉 electron
 
 #### ScreenShot
-![ScreenShot]()
+![ScreenShot](https://raw.githubusercontent.com/reditaru/Rediter/master/screenshot.png?token=AULdM_4iVRZGvMG4hNmWFcD12v_KHPlhks5a2MX3wA%3D%3D)
 #### Build Setup
 
 ``` bash
