@@ -3,24 +3,6 @@ import Vue from 'vue'
 const state = {
     currentFeed: 0,
     feeds: {
-        1: {
-            1: {
-                id: 1,
-                name: 'Guoker',
-                address: 'https://www.appinn.com/feed/'
-            },
-            2: {
-                id: 2,
-                name: 'Test Feed2',
-                address: 'http://feed.williamlong.info/'
-            }
-        },
-        2: {
-            3: {
-                id: 3,
-                name: 'T Fed'
-            }
-        }
     },
     loading: false,
     status: false,
@@ -71,16 +53,21 @@ const state = {
   const actions = {
     async requestNewPosts ({ commit }, payload) {
         commit('OPERATION_REQUEST');
-        let data = await FeedApi.getFeedPosts(payload);
-        let data2 = await FeedApi.getLocalPosts(payload);
-        console.log(data2);
-        if (data && data.success) {
-                commit('OPERATION_SUCCESS');
-                commit('Post/SET_POSTS', { feedId: payload.id, posts: data.items }, { root: true });
-                //commit('Post/SET_POSTS', { feedId: payload.id, posts: data2 }, { root: true });
-        } else {
-                commit('OPERATION_FAIL', { msg: 'Request failed!' });
-        };
+        let netRequest = FeedApi.getFeedPosts(payload);
+        let localRequest = payload.local ? FeedApi.getLocalPosts(payload):Promise.resolve();
+        await Promise.all([ netRequest, localRequest ])
+            .then((res) => {
+                let data = res[0];
+                let localData = res[1];
+                if (data && data.success && (!payload.local || (payload.local && localData && localData.success))) {
+                        commit('OPERATION_SUCCESS');
+                        commit('Post/SET_POSTS', { feedId: payload.id, posts: data.items }, { root: true });
+                        if (payload.local)
+                            commit('Post/SET_POSTS', { feedId: payload.id, posts: localData.res }, { root: true });
+                } else {
+                        commit('OPERATION_FAIL', { msg: 'Request failed!' });
+                };
+            })
     },
     async addNewFeed ({ commit }, payload) {
         commit('OPERATION_REQUEST');

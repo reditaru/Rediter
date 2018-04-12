@@ -6,6 +6,7 @@
 </template>
 
 <script>
+  import { mapState } from 'vuex'
   export default {
     name: 'rediter',
     data() {
@@ -14,6 +15,22 @@
           message: '',
           type: 'default',
           visible: false
+        }
+      }
+    },
+    computed: {
+      ...mapState({
+        test: state => state.Category.test,
+        isLogin: state => state.Auth.isLogin,
+        msg: state => state.Category.msg
+      })
+    },
+    watch: {
+      test(newValue, oldValue) {
+        if(!newValue && oldValue && !this.isLogin) {
+          let type = 'fail';
+          let msg =  this.msg;
+          this.$root.$emit('showAlert', { type: type, message: msg, duration: 3000});
         }
       }
     },

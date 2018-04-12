@@ -6,7 +6,12 @@
             <Icon class="icon" name="refresh" scale="1.5" @click.native="refresh()"></Icon>
         </div>
         <div class="flex-item posts">
-            <h2>Posts</h2>
+            <h2 class="title">Posts</h2>
+            <select v-model="selected">
+                <option value="0">Default</option>
+                <option value="1">Unread</option>
+                <option value="2">Read</option>
+            </select>
         </div>
         <Spinner v-if="loading" style="margin-top:8px; margin-bottom:8px;"></Spinner>
         <div v-if="!empty" class="list">
@@ -34,7 +39,8 @@
         data() {
             return {
                 searchText: '',
-                actualText: []
+                actualText: [],
+                selected: '0'
             }
         },
         components: {
@@ -62,14 +68,16 @@
                     Object.keys(this.posts[this.currentFeed]).forEach((key) => {
                         let data = this.posts[this.currentFeed][key];
                         let flag = false;
-                        if (this.actualText.length !== 0) {
-                            this.actualText.forEach((item) => {
-                                if (data.summary.includes(item) || data.title.includes(item)) {
-                                    flag = true;
-                                }
-                            });
-                        } else {
-                            flag = true;
+                        if ((this.selected === '0') || (this.selected === '1' && !data.status) || (this.selected ==='2' && data.status)) {
+                            if (this.actualText.length !== 0) {
+                                this.actualText.forEach((item) => {
+                                    if (data.summary.includes(item) || data.title.includes(item)) {
+                                        flag = true;
+                                    }
+                                });
+                            } else {
+                                flag = true;
+                            }
                         }
                         if (flag) {
                             let date = moment(data.date).format('MMM DD, YYYY');
@@ -120,7 +128,7 @@
             if (!this.posts[this.currentFeed]) {
                 if (this.feeds[this.currentCategory] && this.feeds[this.currentCategory][this.currentFeed]) {
                     let feed = this.feeds[this.currentCategory][this.currentFeed];
-                    this.$store.dispatch('Feed/requestNewPosts', feed);
+                    this.$store.dispatch('Feed/requestNewPosts', { ...feed, local: true });
                 }
             }
         }
@@ -167,6 +175,27 @@
         .empty-msg {
             text-align: center;
             padding-top: 8px;
+        }
+        .posts {
+            .title {
+                flex: 1;
+            }
+        }
+        select {
+            margin: 0;
+            margin-right: 12px;
+            overflow: visible;
+            background-clip: padding-box;
+            border: 1px solid #ced4da;
+            border-radius: .25rem;
+            padding: .375rem .75rem;
+            font-size: 1rem;
+            line-height: 1.5;
+            color: #495057;
+            background-color: #fff;
+            font-family: inherit;
+            border-radius: 6px;
+            border-width: 1px;
         }
     }
 </style>

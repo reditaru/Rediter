@@ -1,4 +1,5 @@
 import * as CategoryAPI from '../../services/Category'
+import auth from '../../utils/auth'
 import Vue from 'vue'
 const state = {
     currentCategory: 0,
@@ -7,7 +8,8 @@ const state = {
     },
     loading: false,
     status: false,
-    msg: ""
+    msg: "",
+    test: false
   }
   
   const mutations = {
@@ -40,16 +42,25 @@ const state = {
       state.loading = false;
       state.status = true;
     },
-    OPERATION_FAIL (state,payload) {
+    OPERATION_FAIL (state, payload) {
       state.loading = false;
       state.status = false;
       state.msg = payload.msg;
+    },
+    SET_TEST_FLAG (state, payload) {
+      state.test = payload;
     }
   }
   
   const actions = {
     async getCategories ({ commit }, payload) {
       commit('OPERATION_REQUEST');
+      if (payload && payload.test){
+        commit('SET_TEST_FLAG', true);
+        let user = JSON.parse(localStorage.getItem('user'));
+        commit('Auth/SET_CURRENT_USER', user, { root: true });
+        commit('Auth/SET_LOGIN_STATUS', true, { root: true });
+      }
       let data = await CategoryAPI.getCategories();
       if (data && data.data) {
         data = data.data;
@@ -57,11 +68,20 @@ const state = {
           commit('SET_CATEGORIES', data.res);
           commit('OPERATION_SUCCESS');
         } else {
-          commit('OPERATION_FAIL', data);
+          if (payload && payload.test){
+            commit('OPERATION_FAIL', { msg: 'Token expired! Please login again'});
+            commit('Auth/SET_CURRENT_USER', {}, { root: true });
+            commit('Auth/SET_LOGIN_STATUS', false, { root: true });
+            auth.clearAuth();
+          }
+          else
+            commit('OPERATION_FAIL', data);
         }
       } else {
         commit('OPERATION_FAIL', { msg: 'Meet some unknown error!'});
       }
+      if (payload && payload.test) 
+        commit('SET_TEST_FLAG', false);
     },
     async createCategory({ commit }, payload) {
       commit('OPERATION_REQUEST');

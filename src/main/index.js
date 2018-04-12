@@ -1,4 +1,4 @@
-import { app, BrowserWindow, shell, ipcMain } from 'electron'
+import { app, BrowserWindow, shell, ipcMain, screen } from 'electron'
 import parseFeed from './service/Feed'
 import './service/LocalStorage'
 /**
@@ -18,14 +18,17 @@ function createWindow () {
   /**
    * Initial window options
    */
+  const { width, height } = screen.getPrimaryDisplay().workAreaSize
   mainWindow = new BrowserWindow({
-    height: 563,
+    height: height,
     useContentSize: true,
-    width: 1000
+    width: width,
+    minHeight: 600,
+    minWidth: 800
   })
-  //mainWindow.setMenu(null);
+  mainWindow.maximize();
+  mainWindow.setMenu(null);
   mainWindow.loadURL(winURL)
-
   mainWindow.on('closed', () => {
     mainWindow = null
   })
@@ -43,7 +46,7 @@ app.on('ready', createWindow)
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
-    //app.quit()
+    app.quit()
   }
 })
 

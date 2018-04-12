@@ -7,17 +7,23 @@
             </div>
             <span class="author">{{ post.author }}</span>
             <span class="date">发布于 {{ date }} </span>
+            <Icon class="icon share" name="share" scale="1.8" @click.native="copy"></Icon>
         </div>
         <div ref="content" v-html="post.description" @click="handleClick"></div>
     </div>
 </template>
 
 <script>
+    import Icon from "vue-awesome/components/Icon"
+    import "vue-awesome/icons/share"
     import { mapState } from 'vuex'
     import moment from 'moment'
-    import { shell } from 'electron'
+    import { shell, clipboard } from 'electron'
     export default {
         name: 'ContentArea',
+        components: {
+            Icon
+        },
         data() {
             return {
                 lastPost: 0
@@ -51,6 +57,10 @@
                     }
                     target = target.parentElement;
                 }
+            },
+            copy(event) {
+                this.$root.$emit('showAlert', { type: "success", message: "Copied to clipboard!", duration: 3000});
+                clipboard.writeText(this.post.link);
             }
         }
     }
@@ -61,7 +71,7 @@
         flex: 1;
         display: flex;
         background-color: white;
-        overflow-y: scroll;
+        overflow: scroll;
         padding: 50px 40px;
         color: black;
         flex-direction: column;
@@ -82,6 +92,16 @@
                     margin: 3px;
                     margin-left: 0px;
                     background-color: #e6e6e6;
+                }
+            }
+            .share {
+                position: fixed;
+                top: 50px;
+                right: 50px;
+                opacity: 0.6;
+                cursor: pointer;
+                &:hover {
+                    color: rgb(50, 89, 102);
                 }
             }
             .date {

@@ -22,15 +22,19 @@ const state = {
         }
     },
     SET_POSTS (state, payload) {
-        let links = {};
-        for (let post of payload.posts){
-            links[post.link] = post;
+        let data = payload.posts;
+        if (Object.prototype.toString.call(payload.posts) === '[object Array]') {
+            data = {};
+            for (let post of payload.posts){
+                let status = state.posts[payload.feedId] && state.posts[payload.feedId][post.link] && state.posts[payload.feedId][post.link].status;
+                data[post.link] = { ...post, status: status };
+            }
         }
         state.posts = {
             ...state.posts,
             [payload.feedId]: {
                 ...(state.posts[payload.feedId] || {}),
-                ...links
+                ...data
             }
         }
     },
